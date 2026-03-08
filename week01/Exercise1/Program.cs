@@ -15,5 +15,6 @@ class Program
         Console.WriteLine(" ");
 
         Console.WriteLine("::::::: Successful Exercise1 Project.::::::");
+        Console.WriteLine(" ");
     }
 }
