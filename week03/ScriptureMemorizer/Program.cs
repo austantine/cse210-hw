@@ -3,137 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-public class Reference
-{
-    private string book;
-    private int chapter;
-    private int startVerse;
-    private int endVerse;
-
-    // Constructor for a single verse
-    public Reference(string book, int chapter, int verse)
-    {
-        this.book = book;
-        this.chapter = chapter;
-        this.startVerse = verse;
-        this.endVerse = verse;
-    }
-
-    // Constructor for a verse range
-    public Reference(string book, int chapter, int startVerse, int endVerse)
-    {
-        this.book = book;
-        this.chapter = chapter;
-        this.startVerse = startVerse;
-        this.endVerse = endVerse;
-    }
-
-    // Display reference as "Book Chapter:Verse" or "Book Chapter:StartVerse-EndVerse"
-    public string GetDisplayText()
-    {
-        return startVerse == endVerse
-            ? $"{book} {chapter}:{startVerse}"
-            : $"{book} {chapter}:{startVerse}-{endVerse}";
-    }
-}
-
-public class Word
-{
-    private string text;
-    private bool hidden;
-
-    public Word(string text)
-    {
-        this.text = text;
-        hidden = false; // words start visible
-    }
-
-    // Hide the word
-    public void Hide() => hidden = true;
-
-    // Check if word is hidden
-    public bool IsHidden() => hidden;
-
-    // Return the actual word text (used in quiz mode)
-    public string GetText() => text;
-
-    // Display underscores if hidden, otherwise show the word
-    public string GetDisplayText()
-    {
-        return hidden ? new string('_', text.Length) : text;
-    }
-}
-
-public class Scripture
-{
-    private Reference reference;
-    private List<Word> words;
-
-    // Constructor splits verse text into Word objects
-    public Scripture(Reference reference, string text)
-    {
-        this.reference = reference;
-        words = text.Split(' ').Select(w => new Word(w)).ToList();
-    }
-
-    // Hide a few random words each time
-    public void HideRandomWords(int count, Random rand)
-    {
-        var visibleWords = words.Where(w => !w.IsHidden()).ToList();
-
-        for (int i = 0; i < count && visibleWords.Count > 0; i++)
-        {
-            int index = rand.Next(visibleWords.Count);
-            visibleWords[index].Hide();
-            visibleWords.RemoveAt(index); // remove so we don’t hide same word twice in one round
-        }
-    }
-
-    // Check if all words are hidden
-    public bool AllWordsHidden() => words.All(w => w.IsHidden());
-
-    // Display reference + scripture text
-    public string GetDisplayText()
-    {
-        string verseText = string.Join(" ", words.Select(w => w.GetDisplayText()));
-        return $"{reference.GetDisplayText()} - {verseText}";
-    }
-
-    // Track progress as percentage of words hidden
-    public double GetProgressPercentage()
-    {
-        int total = words.Count;
-        int hidden = words.Count(w => w.IsHidden());
-        return (double)hidden / total * 100;
-    }
-
-    // Quiz mode – ask user to guess hidden words
-    public void QuizUser()
-    {
-        foreach (var word in words.Where(w => w.IsHidden()))
-        {
-            Console.Write($"Guess the hidden word ({word.GetDisplayText()}): ");
-            string guess = Console.ReadLine();
-
-            if (guess.Equals(word.GetText(), StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine("✅ Correct!");
-                // Reveal word once guessed correctly
-                typeof(Word).GetField("hidden", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                            .SetValue(word, false);
-            }
-            else
-            {
-                Console.WriteLine($"❌ Incorrect. The word was: {word.GetText()}");
-            }
-        }
-    }
-}
+// This program exceeds the core requirements by:
+// 1. Loading scriptures from an external file instead of hardcoding them.
+// 2. Working with a library of scriptures and selecting one at random.
+// 3. Adding a quiz mode that helps users actively recall hidden words.
+// 4. Tracking progress by showing the percentage of words hidden.
+// These enhancements make the program more interactive and effective for memorization.
 
 class Program
 {
     // Use a single static Random instance to avoid repeatable sequences
-    static Random rand = new Random();
+    static Random _rand = new Random();
 
     static void Main(string[] args)
     {
@@ -147,7 +27,7 @@ class Program
         }
 
         // Pick a random scripture from the library
-        Scripture scripture = library[rand.Next(library.Count)];
+        Scripture scripture = library[_rand.Next(library.Count)];
 
         // Main loop: display scripture, hide words, track progress
         while (true)
@@ -171,7 +51,7 @@ class Program
             }
 
             // Hide 3 random words each round
-            scripture.HideRandomWords(3, rand);
+            scripture.HideRandomWords(3, _rand);
 
             // End program when all words are hidden
             if (scripture.AllWordsHidden())
